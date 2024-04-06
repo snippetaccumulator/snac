@@ -1,0 +1,4 @@
+bin
+tmp
+.env
+internal/backend/database/.env.test
