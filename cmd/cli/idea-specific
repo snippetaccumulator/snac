@@ -1,0 +1,39 @@
+### Global Options
+
+- `--config <path>`: Override the default config file location.
+- `--url <url>`: Override the default database connection URL.
+- `--token <token>`: Provide an authentication token for database access.
+- `--team-name <team_name>`: Override the used team name.
+- `--password <password>`: Override the used password. Required when executing operations that need the admin password
+
+### Main Command: `snac`
+
+#### Subcommands for Snippets
+
+- `snac status`: Shows the connection status to the database, the current configuration file location, and other relevant system checks.
+- `snac create/c (-n/--noninteractive) [options]`: Starts an interactive session to create a new snippet unless `-n` is specified, which requires all fields to be filled via flags.
+    - `--title <title>`: Required title of the snippet.
+    - `--description <description>`: Optional description.
+    - `--tags <tag1,tag2,...>`: Comma-separated list of tags; at least one required.
+    - `--language <language>`: Programming language of the snippet. Optional
+    - `--content <content>`: Content of the snippet; can be empty.
+    - `--content-file <filepath>`: Path for file used for contents
+    - either content or content file is required, so must be one of them, cannot be both.
+- `snac delete/d <id>`: Deletes a snippet by ID.
+- `snac update/u <id> (-n/--noninteractive) [options]`: Updates the metadata for a snippet. Interactive by default. Same options as create but without content
+- `snac edit/e <id> [-s/--skip-meta] [-f/--file <path>]`: Opens the snippet content in a configured editor (unless --file is given). Allows editing and optional updating of metadata. If file is `-` stdin should be used for stuff like piping
+- `snac show/s <id> (-s/--short) (--content-only) (--cut-off <length>) (-f/--format json/yaml)`: Shows detailed information about a snippet. Flags to modify output detail and length. Can optionally format output as JSON or YAML
+- `snac copy/cp <id> (-s/--silent) (-o/--output-file <path>)`: Copies the content of a snippet to the clipboard and optionally to a file. Can suppress stdout.
+- `snac list/l (-t/--tag <tag>) (-l/--language <language>) (-q/--query <text>) (--content-length-min <min-length>) (--content-length-max <max-length>) (--full) (-f/--format json/yaml)`: Lists snippets with filters and options for output detail. Tag can be used multiple times to allow more than one tag. query searches in title and description of snippet for matches. Can optionally format output as JSON or YAML
+
+#### Subcommands for Teams (`snac team`)
+
+- `snac team create/c (-n/--noninteractive) [options]`: Creates a new team.; Behaves similar to the snippet create
+    - `--name <name>`: Unique identifier for the team.
+    - `--display-name <display_name>`: Human-readable name for the team.
+    - `--password <password>`: Regular team password.
+    - `--admin-password <admin_password>`: Admin password for the team.
+- `snac team delete <name> (-y/--yes)`: Deletes a team after confirmation, with an option to bypass it.
+- `snac team update <name> [options]`: Updates team details.
+- `snac team show [-f/--format yaml/json] <name>`: Displays summary information about a team, including the count of snippets. Can optionally format output as JSON or YAML
+- `snac team use <name> <password>`: Switches the current configuration to use a specified team and password, saving these details in the config.
