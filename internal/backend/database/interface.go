@@ -12,5 +12,6 @@ type Database interface {
 	InsertTeam(teamID string, displayName string, password string, adminPassword string) error
 	UpdateTeam(team model.Team) error
 	DeleteTeam(teamID string) error
+	CheckTeamPassword(teamID string, password string, admin bool) (bool, error)
 	Close()
 }

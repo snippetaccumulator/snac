@@ -206,3 +206,35 @@ func (db *DB) DeleteTeam(teamID string) error {
 	_, err := db.Exec(query, teamID)
 	return err
 }
+
+func (db *DB) CheckTeamPassword(teamID string, password string, admin bool) (bool, error) {
+	var hash_field string
+	if admin {
+		hash_field = "admin_hash"
+	} else {
+		hash_field = "password_hash"
+	}
+
+	var displayName string
+	var hash string
+
+	query := `SELECT display_name, ` + hash_field + ` FROM teams WHERE name = ?`
+	row := db.QueryRow(query, teamID)
+	err := row.Scan(&displayName, &hash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, fmt.Errorf("Team with name '%s' was not found", teamID)
+		}
+		return false, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}

@@ -182,4 +182,33 @@ func TestGetByTeam(t *testing.T) {
 	}
 }
 
-// TODO
+func TestCheckTeamPassword(t *testing.T) {
+	connection := connect(t)
+	defer connection.Close()
+	deleteAll(connection, t)
+	teamName := teamCreateIfNotExist(connection, t)
+
+	// test correct password regular
+	correct, err := connection.CheckTeamPassword(teamName, "password", false)
+	if !correct || err != nil {
+		t.Errorf("Got wrong password: exp: true, act: %v, err: %v", correct, err)
+	}
+
+	// test correct password admin
+	correct, err = connection.CheckTeamPassword(teamName, "password", true)
+	if !correct || err != nil {
+		t.Errorf("Got wrong password: exp: true, act: %v, err: %v", correct, err)
+	}
+
+	// test incorrect password regular
+	correct, err = connection.CheckTeamPassword(teamName, "wrong", false)
+	if correct || err != nil {
+		t.Errorf("Got wrong password: exp: false, act: %v, err: %v", correct, err)
+	}
+
+	// test incorrect password admin
+	correct, err = connection.CheckTeamPassword(teamName, "wrong", true)
+	if correct || err != nil {
+		t.Errorf("Got wrong password: exp: false, act: %v, err: %v", correct, err)
+	}
+}

@@ -13,6 +13,11 @@ type MockDatabase struct {
 	mock.Mock
 }
 
+func (m *MockDatabase) CheckTeamPassword(teamID string, password string, admin bool) (bool, error) {
+	args := m.Called(teamID, password, admin)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockDatabase) GetTeamByID(teamID string) (model.Team, error) {
 	args := m.Called(teamID)
 	return args.Get(0).(model.Team), args.Error(1)
@@ -64,6 +69,7 @@ func (m *MockDatabase) Close() {
 
 func TestRequestExecute_Get(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippet := model.Snippet{ID: "1", Content: "Sample"}
 	snippetID := model.ID("1")
 
@@ -71,7 +77,7 @@ func TestRequestExecute_Get(t *testing.T) {
 	db.On("GetByID", snippetID).Return(snippet, nil)
 
 	// Test case for successful Get
-	req := NewRequestBuilder().Get(snippetID).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Get(snippetID).Build()
 	result, retType, err := req.Execute(db)
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
@@ -83,6 +89,7 @@ func TestRequestExecute_Get(t *testing.T) {
 
 func TestRequestExecute_GetAllPartials(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	teamID := "team1"
 	partials := []model.PartialSnippet{{ID: "1", Title: "Sample Partial"}}
 
@@ -90,7 +97,7 @@ func TestRequestExecute_GetAllPartials(t *testing.T) {
 	db.On("GetByTeamID", teamID).Return(partials, nil) // Successful case
 
 	// Create the request
-	req := NewRequestBuilder().ForTeamByID(teamID, "", false).GetAllPartials().Build()
+	req := NewRequestBuilder().ForTeamByID(teamID, "password", false).GetAllPartials().Build()
 
 	// Execute the request
 	result, retType, err := req.Execute(db)
@@ -103,10 +110,11 @@ func TestRequestExecute_GetAllPartials(t *testing.T) {
 
 func TestRequestExecute_Insert(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippet := model.Snippet{ID: "1", Content: "Sample"}
 	db.On("InsertSnippet", snippet).Return(snippet, nil) // Mock successful insert
 
-	req := NewRequestBuilder().Insert(snippet).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Insert(snippet).Build()
 
 	// Test successful Insert
 	result, retType, err := req.Execute(db)
@@ -119,10 +127,11 @@ func TestRequestExecute_Insert(t *testing.T) {
 
 func TestRequestExecute_Update(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippet := model.Snippet{ID: "1", Content: "Updated Sample"}
 	db.On("UpdateSnippet", snippet).Return(nil) // Mock successful update
 
-	req := NewRequestBuilder().Update(snippet).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Update(snippet).Build()
 
 	// Test successful Update
 	_, retType, err := req.Execute(db)
@@ -134,10 +143,11 @@ func TestRequestExecute_Update(t *testing.T) {
 
 func TestRequestExecute_Delete(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippetID := model.ID("1")
 	db.On("DeleteSnippet", snippetID).Return(nil) // Mock successful delete
 
-	req := NewRequestBuilder().Delete(snippetID).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Delete(snippetID).Build()
 
 	// Test successful Delete
 	_, retType, err := req.Execute(db)
@@ -164,10 +174,11 @@ func TestRequestExecute_InsertTeam(t *testing.T) {
 
 func TestRequestExecute_UpdateTeam(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	team := model.Team{Name: "existingTeam", DisplayName: "Updated Team", PasswordHash: "passhash", AdminHash: "adminhash"}
 	db.On("UpdateTeam", team).Return(nil) // Mock successful update
 
-	req := NewRequestBuilder().UpdateTeam(team).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).UpdateTeam(team).Build()
 
 	// Test successful UpdateTeam
 	_, retType, err := req.Execute(db)
@@ -179,10 +190,11 @@ func TestRequestExecute_UpdateTeam(t *testing.T) {
 
 func TestRequestExecute_DeleteTeam(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	teamID := "team1"
 	db.On("DeleteTeam", teamID).Return(nil) // Mock successful delete
 
-	req := NewRequestBuilder().DeleteTeam(teamID).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).DeleteTeam(teamID).Build()
 
 	// Test successful DeleteTeam
 	_, retType, err := req.Execute(db)
@@ -194,11 +206,12 @@ func TestRequestExecute_DeleteTeam(t *testing.T) {
 
 func TestRequestExecute_Get_Negative(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	invalidID := model.ID("2")
 
 	// Test case for failed Get due to non-existent ID
 	db.On("GetByID", invalidID).Return(model.Snippet{}, errors.New("snippet not found"))
-	req := NewRequestBuilder().Get(invalidID).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Get(invalidID).Build()
 	_, _, err := req.Execute(db)
 	assert.NotNil(t, err)
 
@@ -213,9 +226,10 @@ func TestRequestExecute_Get_Negative(t *testing.T) {
 
 func TestRequestExecute_Insert_Negative(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippet := model.Snippet{ID: "1", Content: "Sample"}
 	db.On("InsertSnippet", snippet).Return(model.Snippet{}, errors.New("insert error"))
-	req := NewRequestBuilder().Insert(snippet).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Insert(snippet).Build()
 	_, _, err := req.Execute(db)
 	assert.NotNil(t, err)
 
@@ -224,9 +238,10 @@ func TestRequestExecute_Insert_Negative(t *testing.T) {
 
 func TestRequestExecute_Update_Negative(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippet := model.Snippet{ID: "1", Content: "Updated Sample"}
 	db.On("UpdateSnippet", snippet).Return(errors.New("update error"))
-	req := NewRequestBuilder().Update(snippet).Build()
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Update(snippet).Build()
 	_, _, err := req.Execute(db)
 	assert.NotNil(t, err)
 
@@ -235,9 +250,10 @@ func TestRequestExecute_Update_Negative(t *testing.T) {
 
 func TestRequestExecute_Delete_Negative(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	snippetID := model.ID("1")
 	db.On("DeleteSnippet", snippetID).Return(errors.New("delete error"))
-	req := NewRequestBuilder().Delete(snippetID).Build()
+	req := Request{Operation: Delete, teamID: "team1", password: "password", Data: snippetID}
 	_, _, err := req.Execute(db)
 	assert.NotNil(t, err)
 
@@ -257,9 +273,10 @@ func TestRequestExecute_InsertTeam_Negative(t *testing.T) {
 
 func TestRequestExecute_UpdateTeam_Negative(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	team := model.Team{Name: "existingTeam", DisplayName: "Updated Team", PasswordHash: "passhash", AdminHash: "adminhash"}
 	db.On("UpdateTeam", team).Return(errors.New("update team error"))
-	req := NewRequestBuilder().UpdateTeam(team).Build()
+	req := Request{Operation: UpdateTeam, teamID: "team1", password: "password", Data: team}
 	_, _, err := req.Execute(db)
 	assert.NotNil(t, err)
 
@@ -268,9 +285,20 @@ func TestRequestExecute_UpdateTeam_Negative(t *testing.T) {
 
 func TestRequestExecute_DeleteTeam_Negative(t *testing.T) {
 	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(true, nil)
 	teamID := "team1"
 	db.On("DeleteTeam", teamID).Return(errors.New("delete team error"))
-	req := NewRequestBuilder().DeleteTeam(teamID).Build()
+	req := Request{Operation: DeleteTeam, teamID: "team1", password: "password", Data: teamID}
+	_, _, err := req.Execute(db)
+	assert.NotNil(t, err)
+
+	db.AssertExpectations(t)
+}
+
+func TestWrongPassword(t *testing.T) {
+	db := new(MockDatabase)
+	db.On("CheckTeamPassword", "team1", "password", false).Return(false, nil)
+	req := NewRequestBuilder().ForTeamByID("team1", "password", false).Get(model.ID("1")).Build()
 	_, _, err := req.Execute(db)
 	assert.NotNil(t, err)
 

@@ -114,7 +114,25 @@ const (
 	ReturnNone
 )
 
+func passwordCheckNeeded(op Operation) bool {
+	switch op {
+	case Get, GetAllPartials, Insert, Update, Delete, UpdateTeam, DeleteTeam:
+		return true
+	}
+	return false
+}
+
 func (r Request) Execute(db database.Database) (any, RequestReturn, error) {
+	if passwordCheckNeeded(r.Operation) {
+		correctPassword, err := db.CheckTeamPassword(r.teamID, r.password, r.admin)
+		if err != nil {
+			return nil, ReturnNone, fmt.Errorf("Error while checking team password: %v", err)
+		}
+		if !correctPassword {
+			return nil, ReturnNone, fmt.Errorf("Incorrect password for team '%s'", r.teamID)
+		}
+	}
+
 	switch r.Operation {
 	case GetAllPartials:
 		partials, err := db.GetByTeamID(r.teamID)
