@@ -7,5 +7,7 @@ type Database struct {
 }
 
 type CommonConfig struct {
+	TeamName string
+	Password string
 	Database Database `yaml:"database"`
 }
