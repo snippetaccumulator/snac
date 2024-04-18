@@ -1,4 +1,4 @@
-package backend
+package request
 
 import (
 	"fmt"
@@ -18,6 +18,7 @@ const (
 	InsertTeam
 	UpdateTeam
 	DeleteTeam
+	Check
 )
 
 type Request struct {
@@ -93,6 +94,11 @@ func (b *RequestBuilder) DeleteTeam(teamID string) *RequestBuilder {
 	return b
 }
 
+func (b *RequestBuilder) Check() *RequestBuilder {
+	b.request.Operation = Check
+	return b
+}
+
 func (b *RequestBuilder) Build() Request {
 	r := b.request
 	b.Reset()
@@ -116,7 +122,7 @@ const (
 
 func passwordCheckNeeded(op Operation) bool {
 	switch op {
-	case Get, GetAllPartials, Insert, Update, Delete, UpdateTeam, DeleteTeam:
+	case Get, GetAllPartials, Insert, Update, Delete, UpdateTeam, DeleteTeam, Check:
 		return true
 	}
 	return false
@@ -210,7 +216,40 @@ func (r Request) Execute(db database.Database) (any, RequestReturn, error) {
 			return nil, ReturnNone, fmt.Errorf("Error while executing DeleteTeam for '%v': %v", r.Data, err)
 		}
 		return nil, ReturnNone, nil
+	case Check:
+		return true, ReturnBoolean, nil
 	}
 
 	return nil, ReturnNone, nil
+}
+
+func TypeCheck(data any, retType RequestReturn) error {
+	switch retType {
+	case ReturnSingleSnippet:
+		_, ok := data.(model.Snippet)
+		if !ok {
+			return fmt.Errorf("Expected data to be a snippet")
+		}
+	case ReturnSnippetList:
+		_, ok := data.([]model.Snippet)
+		if !ok {
+			return fmt.Errorf("Expected data to be a list of snippets")
+		}
+	case ReturnPartials:
+		_, ok := data.([]model.PartialSnippet)
+		if !ok {
+			return fmt.Errorf("Expected data to be a list of partials")
+		}
+	case ReturnTeam:
+		_, ok := data.(model.Team)
+		if !ok {
+			return fmt.Errorf("Expected data to be a team")
+		}
+	case ReturnBoolean:
+		_, ok := data.(bool)
+		if !ok {
+			return fmt.Errorf("Expected data to be a boolean")
+		}
+	}
+	return nil
 }
