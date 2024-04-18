@@ -9,6 +9,7 @@ import (
 
 	"github.com/snippetaccumulator/configloader"
 	"github.com/snippetaccumulator/snac/internal/backend/model"
+	"github.com/snippetaccumulator/snac/internal/common"
 )
 
 func connect(t *testing.T) Database {
@@ -42,7 +43,13 @@ func connect(t *testing.T) Database {
 		}
 	}
 
-	db, err := NewDB(mockLoader)
+	var cfg common.CommonConfig
+	err = mockLoader.Load(&cfg)
+	if err != nil {
+		t.Errorf("mockLoader.Load() error = %v", err)
+	}
+
+	db, err := NewDB(cfg.Database)
 	if err != nil {
 		t.Errorf("NewDB() error = %v", err)
 	}

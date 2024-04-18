@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/snippetaccumulator/configloader"
 	"github.com/snippetaccumulator/snac/internal/backend/model"
 	"github.com/snippetaccumulator/snac/internal/common"
 	"github.com/tursodatabase/go-libsql"
@@ -26,15 +25,7 @@ func (db *DB) Close() {
 	db.DB.Close()
 }
 
-func NewDB(loader configloader.Loader) (*DB, error) {
-	var commonConfig common.CommonConfig
-	err := loader.Load(&commonConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	dbCfg := commonConfig.Database
-
+func NewDB(dbCfg common.Database) (*DB, error) {
 	dir, err := os.MkdirTemp("", "snac-*")
 	if err != nil {
 		return nil, err
